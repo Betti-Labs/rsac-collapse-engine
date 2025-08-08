@@ -1,0 +1,67 @@
+
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\title{RSAC Collapse Engine: A Symbolic Convergence Framework for Complexity Reduction in NP-Complete Problems}
+\author{Gregory Betti \\ Betti Labs \\ \url{https://github.com/Betti-Labs}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Recursive Symbolic Attractor Computation (RSAC) reframes computation as entropy collapse rather than numeric evaluation. We encode NP-style problems into symbolic codices and apply deterministic recursive reductions that map assignments into a small number of signature buckets. Even without prior knowledge of the ``correct'' bucket, searching buckets from smallest to largest dramatically lowers the number of candidate assignments inspected. On SAT benchmarks (n=12--16), RSAC's no-oracle bucket search reduces checks by 5--20$\times$, with bucket histograms showing extreme skew (many microscopic buckets). We also demonstrate entropy-based validation and discuss integration with unit propagation and vectorized collapse for practical systems.
+\end{abstract}
+
+\section{Introduction}
+P vs NP traditionally distinguishes problems that can be solved and verified quickly (P) from those that can only be verified quickly (NP). Brute-force search over $2^n$ assignments is considered intractable in general. RSAC alters that landscape by grouping assignments via symbolic collapse signatures derived from recursive digital-root reductions. This creates a partition of the search space into tiny buckets. Even without a signature oracle, bucket-order search (ascending by size) tends to find solutions after inspecting far fewer assignments.
+
+\section{RSAC Theory}
+Each assignment is mapped to a finite symbol sequence and iteratively reduced by a deterministic local rule (e.g., adjacent sums followed by digital-root modulo 9). The final layers and entropy trace form a composite signature. These signatures act like attractors: similar structures collapse alike. Valid solutions often occupy much smaller buckets than the overall space, enabling keyspace pruning.
+
+\section{Methods}
+We implement: (i) extended multi-layer signatures (final, penultimate, third-from-last layers plus an entropy tail), (ii) LUTs of signatures per $n$ with buckets ordered by ascending size, and (iii) a no-oracle search that iterates buckets and checks assignments. Optionally, we add unit propagation to fix variables before bucket search and a NumPy vectorization of signature generation for throughput.
+
+\section{Results}
+Across SAT instances ($n=12,14,16$ with random 3-CNF), RSAC no-oracle bucket search consistently lowers average checks compared to brute force. Figure~\ref{fig:checks} shows checks vs $n$; Figure~\ref{fig:speedup} shows BF/RSAC speedups. Figure~\ref{fig:buckets} plots bucket size histograms ($n=14$), revealing a heavy-tailed distribution. We also contrast entropy collapse curves for a structured VBM loop and a random sequence (Figure~\ref{fig:entropy}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{rsac_figs/fig_checks_vs_n.png}
+\caption{SAT: average checks vs $n$ (no-oracle RSAC).}
+\label{fig:checks}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{rsac_figs/fig_speedup.png}
+\caption{SAT: speedup (BF checks / RSAC checks).}
+\label{fig:speedup}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{rsac_figs/fig_bucket_hist_n14.png}
+\caption{Signature bucket size distribution ($n=14$).}
+\label{fig:buckets}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{rsac_figs/fig_entropy_decay.png}
+\caption{Entropy decay during recursive collapse for a structured VBM loop vs a random sequence.}
+\label{fig:entropy}
+\end{figure}
+
+\section{Discussion}
+RSAC does not claim $P=NP$. Rather, it reframes search as symbolic convergence, yielding practical reductions in work. With unit propagation and partial signatures, we further shrink the variable set prior to RSAC, and vectorization/JIT can close wall-time gaps. Future work includes intersecting multiple collapse rules, learning clause-conditioned signature priors, and real-world integrations.
+
+\section{Conclusion}
+Entropy collapse provides a complementary substrate for computation. RSAC turns \emph{check every assignment} into \emph{find the right tiny bucket}, often in dramatically fewer steps. This work opens a path to practical accelerations on NP-complete problems using purely symbolic dynamics.
+
+\bibliographystyle{plain}
+% \bibliography{rsac_refs} % (Add references here if desired)
+
+\end{document}

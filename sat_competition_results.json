@@ -1,0 +1,20 @@
+[
+  {
+    "instance": "simple_sat_8.cnf",
+    "n_vars": 8,
+    "n_clauses": 12,
+    "rsac_result": "SAT",
+    "rsac_checks": 30,
+    "rsac_time": 0.004461526870727539,
+    "minisat_result": "NO_MINISAT"
+  },
+  {
+    "instance": "pigeonhole_3_2.cnf",
+    "n_vars": 6,
+    "n_clauses": 9,
+    "rsac_result": "UNSAT",
+    "rsac_checks": 64,
+    "rsac_time": 0.0009219646453857422,
+    "minisat_result": "NO_MINISAT"
+  }
+]

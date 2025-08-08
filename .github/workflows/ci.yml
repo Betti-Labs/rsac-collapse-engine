@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.8, 3.9, '3.10', 3.11]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: Format check with black
+      run: |
+        pip install black
+        black --check src/
+
+    - name: Type check with mypy
+      run: |
+        pip install mypy
+        mypy src/rsac/ --ignore-missing-imports
+
+    - name: Test with pytest
+      run: |
+        pip install pytest pytest-cov
+        pytest tests/ -v --cov=src/rsac --cov-report=xml
+
+    - name: Run basic benchmarks
+      run: |
+        python src/benchmarks.py --series sat --ns 8 10 --instances 3
+
+    - name: Run stress test
+      run: |
+        python stress_test.py --correctness --cases 5
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+
+    - name: Run comprehensive benchmarks
+      run: |
+        python src/benchmarks.py --series sat --ns 12 14 16 --instances 10
+        python comprehensive_sat_test.py
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: |
+          data/
+          *.csv
+          *.json
+          *.png
+
+  paper:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install LaTeX
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended
+
+    - name: Compile paper
+      run: |
+        cd paper/
+        pdflatex rsac_empirical_paper.tex
+        pdflatex rsac_empirical_paper.tex  # Run twice for references
+
+    - name: Upload paper
+      uses: actions/upload-artifact@v3
+      with:
+        name: compiled-paper
+        path: paper/rsac_empirical_paper.pdf
