@@ -15,17 +15,19 @@
 import itertools, random
 from collections import Counter
 
+
 def gen_random_kcnf(num_vars: int, num_clauses: int, k: int, rng: random.Random):
     clauses = []
     for _ in range(num_clauses):
-        vars_chosen = rng.sample(range(1, num_vars+1), k)
-        clause = [rng.choice([1,-1]) * v for v in vars_chosen]
+        vars_chosen = rng.sample(range(1, num_vars + 1), k)
+        clause = [rng.choice([1, -1]) * v for v in vars_chosen]
         clauses.append(clause)
     return clauses
 
+
 def eval_clause(clause, bits_tuple):
     for lit in clause:
-        v = abs(lit)-1
+        v = abs(lit) - 1
         val = bits_tuple[v]
         if lit < 0:
             val = 1 - val
@@ -33,13 +35,15 @@ def eval_clause(clause, bits_tuple):
             return 1
     return 0
 
+
 def sat_bruteforce(clauses, n):
     checks = 0
-    for bits in itertools.product([0,1], repeat=n):
+    for bits in itertools.product([0, 1], repeat=n):
         checks += 1
         if all(eval_clause(c, bits) for c in clauses):
             return bits, checks
     return None, checks
+
 
 # ---------- Simplification ----------
 def simplify_with_assignment(clauses, assignment_partial: dict):
@@ -66,6 +70,7 @@ def simplify_with_assignment(clauses, assignment_partial: dict):
             new_clauses.append(new_clause)
     return new_clauses
 
+
 def unit_propagate(clauses):
     assignment = {}
     changed = True
@@ -85,6 +90,7 @@ def unit_propagate(clauses):
             return None, None
         changed = True
     return clauses, assignment
+
 
 def pure_literal_elim(clauses, current_assignment):
     changed = True

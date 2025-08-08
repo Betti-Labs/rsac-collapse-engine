@@ -1,24 +1,30 @@
 import itertools
 import numpy as np
 from collections import Counter
-from .collapse import extended_signature_from_seq, vectorized_extended_signature, all_bit_arrays
+from .collapse import (
+    extended_signature_from_seq,
+    vectorized_extended_signature,
+    all_bit_arrays,
+)
 from .utils import bits_to_seq
+
 
 # ---------- Basic LUT and no-oracle search ----------
 def build_lut_basic(n: int):
     """Build lookup table of signatures to bit assignments for given problem size."""
     groups = {}
-    for bits in itertools.product([0,1], repeat=n):
+    for bits in itertools.product([0, 1], repeat=n):
         key = extended_signature_from_seq(bits_to_seq(bits))
         groups.setdefault(key, []).append(bits)
     ordered = sorted(groups.items(), key=lambda kv: len(kv[1]))
     return groups, ordered
 
+
 def bucket_search_no_oracle(clauses, n: int, eval_clause_fn):
     """Search through buckets in ascending size order to find satisfying assignment."""
     # Build LUT for this problem size
     groups, lut = build_lut_basic(n)
-    
+
     checks = 0
     for key, bits_list in lut:
         for bits in bits_list:
@@ -27,9 +33,11 @@ def bucket_search_no_oracle(clauses, n: int, eval_clause_fn):
                 return bits, checks, key
     return None, checks, None
 
+
 # ---------- RSAC + Unit Propagation + Vectorized partial signatures ----------
 _LUT_CACHE = {}
 _BITS_CACHE = {}
+
 
 def get_lut_for_m(m: int):
     if m in _LUT_CACHE:
@@ -45,11 +53,14 @@ def get_lut_for_m(m: int):
     _BITS_CACHE[m] = bits_mat
     return groups, bits_mat
 
-def rsac_up_vectorized_search(clauses_reduced, fixed_assignment: dict, remaining_vars: list):
+
+def rsac_up_vectorized_search(
+    clauses_reduced, fixed_assignment: dict, remaining_vars: list
+):
     m = len(remaining_vars)
     groups, bits_mat = get_lut_for_m(m)
     ordered = sorted(groups.items(), key=lambda kv: kv[1].shape[0])
-    var_to_col = {v:i for i, v in enumerate(remaining_vars)}
+    var_to_col = {v: i for i, v in enumerate(remaining_vars)}
     checks = 0
 
     for key, idxs in ordered:
@@ -72,7 +83,7 @@ def rsac_up_vectorized_search(clauses_reduced, fixed_assignment: dict, remaining
                 vals = rows[:, col]
                 if lit < 0:
                     vals = 1 - vals
-                satisfied |= (vals == 1)
+                satisfied |= vals == 1
             row_ok &= satisfied
             if not row_ok.any():
                 break
