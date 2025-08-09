@@ -12,7 +12,7 @@ from .utils import bits_to_seq
 # ---------- Basic LUT and no-oracle search ----------
 def build_lut_basic(n: int):
     """Build lookup table of signatures to bit assignments for given problem size."""
-    groups = {}
+    groups: dict[tuple, list] = {}
     for bits in itertools.product([0, 1], repeat=n):
         key = extended_signature_from_seq(bits_to_seq(bits))
         groups.setdefault(key, []).append(bits)
@@ -35,8 +35,8 @@ def bucket_search_no_oracle(clauses, n: int, eval_clause_fn):
 
 
 # ---------- RSAC + Unit Propagation + Vectorized partial signatures ----------
-_LUT_CACHE = {}
-_BITS_CACHE = {}
+_LUT_CACHE: dict[int, dict] = {}
+_BITS_CACHE: dict[int, np.ndarray] = {}
 
 
 def get_lut_for_m(m: int):
@@ -44,11 +44,11 @@ def get_lut_for_m(m: int):
         return _LUT_CACHE[m], _BITS_CACHE[m]
     bits_mat = all_bit_arrays(m)
     keys = vectorized_extended_signature(bits_mat)
-    groups = {}
+    groups: dict[tuple, list] = {}
     for idx, key in enumerate(keys):
         groups.setdefault(key, []).append(idx)
     for k in list(groups.keys()):
-        groups[k] = np.array(groups[k], dtype=np.int32)
+        groups[k] = list(np.array(groups[k], dtype=np.int32))
     _LUT_CACHE[m] = groups
     _BITS_CACHE[m] = bits_mat
     return groups, bits_mat

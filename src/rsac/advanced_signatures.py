@@ -202,7 +202,8 @@ class AdvancedSignatureGenerator:
         std_val = int(np.std(trajectory) * 10)
 
         # Lyapunov exponent approximation
-        lyap = sum(np.log(abs(r * (1 - 2 * (t / 1000)))) for t in trajectory[:5]) / 5
+        lyap_vals = [np.log(abs(r * (1 - 2 * (t / 1000)))) for t in trajectory[:5]]
+        lyap = sum(lyap_vals) / 5
         lyap_int = int(abs(lyap) * 100) % 1000
 
         return (tuple(trajectory[:5]), mean_val, std_val, lyap_int)
@@ -217,7 +218,7 @@ class AdvancedSignatureGenerator:
         n = len(state)
 
         generations = []
-        for gen in range(5):  # Evolve for 5 generations
+        for gen_num in range(5):  # Evolve for 5 generations
             generations.append(tuple(state))
             new_state = [0] * n
 
@@ -229,15 +230,16 @@ class AdvancedSignatureGenerator:
             state = new_state
 
         # Extract features
-        final_gen = generations[-1]
-        density = sum(final_gen) / len(final_gen)
+        final_gen = generations[-1] if generations else ()
+        density = sum(final_gen) / len(final_gen) if final_gen else 0
 
         # Pattern analysis
         patterns = []
         for gen in generations:
             pattern_count = 0
-            for i in range(len(gen) - 2):
-                if gen[i : i + 3] == (1, 0, 1):  # Count specific pattern
+            gen_tuple: tuple = gen if isinstance(gen, tuple) else tuple(gen)
+            for i in range(len(gen_tuple) - 2):
+                if gen_tuple[i : i + 3] == (1, 0, 1):  # Count specific pattern
                     pattern_count += 1
             patterns.append(pattern_count)
 
@@ -253,7 +255,7 @@ class AdvancedSignatureGenerator:
         c = complex(real_part - 0.5, imag_part - 0.5)
 
         # Mandelbrot-like iteration
-        z = 0
+        z = complex(0, 0)
         iterations = []
         for i in range(10):
             z = z * z + c
@@ -279,14 +281,14 @@ class AdvancedSignatureGenerator:
 
     def find_best_signature_method(
         self, clauses: List[List[int]], n_vars: int, eval_fn: Callable
-    ) -> Tuple[str, int]:
+    ) -> Tuple[str, float]:
         """Find which signature method gives the best performance on this instance."""
         if n_vars > 16:  # Too expensive for large problems
             return "digital_root", float("inf")
 
         all_signatures = self.generate_all_signature_variants(n_vars)
 
-        best_method = None
+        best_method: str | None = None
         best_checks = float("inf")
 
         for method_name, buckets in all_signatures.items():
@@ -312,7 +314,7 @@ class AdvancedSignatureGenerator:
                 best_method = method_name
 
         print(f"\nBest method: {best_method} with {best_checks} checks")
-        return best_method, best_checks
+        return best_method or "digital_root", best_checks
 
 
 def benchmark_signature_variants(test_cases, max_vars=14):

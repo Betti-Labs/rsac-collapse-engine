@@ -48,9 +48,12 @@ class HybridRSACSolver:
 
         # Stage 1: Preprocessing
         if self.enable_preprocessing:
-            clauses, assignment, n_vars = self._preprocess(clauses, n_vars)
-            if clauses is None:
+            preprocess_result = self._preprocess(clauses, n_vars)
+            if preprocess_result[0] is None:
                 return None, self.stats  # UNSAT during preprocessing
+            clauses = preprocess_result[0]
+            assignment = preprocess_result[1]
+            n_vars = preprocess_result[2]
             if not clauses:  # All clauses satisfied
                 return assignment, self.stats
         else:
@@ -135,22 +138,24 @@ class HybridRSACSolver:
 
     def _preprocess(
         self, clauses: List[List[int]], n_vars: int
-    ) -> Tuple[Optional[List], Dict, int]:
+    ) -> Tuple[Optional[List[List[int]]], Dict, int]:
         """Apply preprocessing techniques."""
         assignment = {}
 
         # Unit propagation
-        clauses, unit_assignment = unit_propagate(clauses)
-        if clauses is None:
-            return None, None, n_vars  # UNSAT
+        clauses_result, unit_assignment = unit_propagate(clauses)
+        if clauses_result is None:
+            return None, {}, n_vars  # UNSAT
+        clauses = clauses_result
 
         if unit_assignment:
             assignment.update(unit_assignment)
 
         # Pure literal elimination
-        clauses, assignment = pure_literal_elim(clauses, assignment)
-        if clauses is None:
-            return None, None, n_vars  # UNSAT
+        clauses_result, assignment = pure_literal_elim(clauses, assignment)
+        if clauses_result is None:
+            return None, {}, n_vars  # UNSAT
+        clauses = clauses_result
 
         # Subsumption elimination (remove subsumed clauses)
         clauses = self._eliminate_subsumption(clauses)
@@ -295,7 +300,7 @@ def benchmark_hybrid_solver(test_cases, max_vars=20):
 
 if __name__ == "__main__":
     # Quick test
-    from ..sat import gen_random_kcnf
+    from .sat import gen_random_kcnf
     import random
 
     # Generate test case
