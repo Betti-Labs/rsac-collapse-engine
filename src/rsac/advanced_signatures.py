@@ -5,7 +5,7 @@ This is where we get creative and push beyond the basic digital-root approach!
 """
 
 import numpy as np
-from typing import List, Tuple, Dict, Callable
+from typing import List, Tuple, Dict, Callable, Optional
 import hashlib
 from collections import defaultdict
 
@@ -288,7 +288,7 @@ class AdvancedSignatureGenerator:
 
         all_signatures = self.generate_all_signature_variants(n_vars)
 
-        best_method: str | None = None
+        best_method: Optional[str] = None
         best_checks = float("inf")
 
         for method_name, buckets in all_signatures.items():
