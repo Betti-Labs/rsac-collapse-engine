@@ -237,7 +237,7 @@ class AdvancedSignatureGenerator:
         patterns = []
         for gen in generations:
             pattern_count = 0
-            gen_tuple: tuple = gen if isinstance(gen, tuple) else tuple(gen)
+            gen_tuple: Tuple = gen if isinstance(gen, tuple) else tuple(gen)
             for i in range(len(gen_tuple) - 2):
                 if gen_tuple[i : i + 3] == (1, 0, 1):  # Count specific pattern
                     pattern_count += 1

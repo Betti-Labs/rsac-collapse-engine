@@ -15,7 +15,7 @@ jobs:
         python-version: [3.8, 3.9, '3.10', 3.11]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -73,7 +73,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
@@ -92,7 +92,7 @@ jobs:
         python comprehensive_sat_test.py
 
     - name: Upload benchmark results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: benchmark-results
         path: |
@@ -106,7 +106,7 @@ jobs:
     needs: test
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install LaTeX
       run: |
@@ -120,7 +120,7 @@ jobs:
         pdflatex rsac_empirical_paper.tex  # Run twice for references
 
     - name: Upload paper
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: compiled-paper
         path: paper/rsac_empirical_paper.pdf
