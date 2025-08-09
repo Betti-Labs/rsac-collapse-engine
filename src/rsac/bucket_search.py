@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from collections import Counter
+from typing import Dict, List, Tuple, Any
 from .collapse import (
     extended_signature_from_seq,
     vectorized_extended_signature,
@@ -12,7 +13,7 @@ from .utils import bits_to_seq
 # ---------- Basic LUT and no-oracle search ----------
 def build_lut_basic(n: int):
     """Build lookup table of signatures to bit assignments for given problem size."""
-    groups: dict[tuple, list] = {}
+    groups: Dict[Tuple, List] = {}
     for bits in itertools.product([0, 1], repeat=n):
         key = extended_signature_from_seq(bits_to_seq(bits))
         groups.setdefault(key, []).append(bits)
@@ -35,8 +36,8 @@ def bucket_search_no_oracle(clauses, n: int, eval_clause_fn):
 
 
 # ---------- RSAC + Unit Propagation + Vectorized partial signatures ----------
-_LUT_CACHE: dict[int, dict] = {}
-_BITS_CACHE: dict[int, np.ndarray] = {}
+_LUT_CACHE: Dict[int, Dict] = {}
+_BITS_CACHE: Dict[int, np.ndarray] = {}
 
 
 def get_lut_for_m(m: int):
@@ -44,7 +45,7 @@ def get_lut_for_m(m: int):
         return _LUT_CACHE[m], _BITS_CACHE[m]
     bits_mat = all_bit_arrays(m)
     keys = vectorized_extended_signature(bits_mat)
-    groups: dict[tuple, list] = {}
+    groups: Dict[Tuple, List] = {}
     for idx, key in enumerate(keys):
         groups.setdefault(key, []).append(idx)
     for k in list(groups.keys()):
