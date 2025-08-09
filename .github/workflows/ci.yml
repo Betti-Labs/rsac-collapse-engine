@@ -111,7 +111,7 @@ jobs:
     - name: Install LaTeX
       run: |
         sudo apt-get update
-        sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended
+        sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-publishers texlive-science
 
     - name: Compile paper
       run: |
