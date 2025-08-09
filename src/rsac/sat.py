@@ -93,6 +93,8 @@ def unit_propagate(clauses):
 
 
 def pure_literal_elim(clauses, current_assignment):
+    # Create a copy to avoid modifying the input
+    assignment = current_assignment.copy()
     changed = True
     while changed:
         changed = False
@@ -113,9 +115,9 @@ def pure_literal_elim(clauses, current_assignment):
             elif neg > 0 and pos == 0:
                 assigns[v] = 0
         if assigns:
-            current_assignment.update(assigns)
+            assignment.update(assigns)
             clauses = simplify_with_assignment(clauses, assigns)
             if clauses is None:
                 return None, None
             changed = True
-    return clauses, current_assignment
+    return clauses, assignment

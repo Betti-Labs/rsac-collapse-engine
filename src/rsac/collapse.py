@@ -71,29 +71,35 @@ def vectorized_extended_signature(bits_mat: np.ndarray) -> list:
     true_vals = np.arange(2, m + 2, dtype=np.int64)  # 2..m+1
     seq = np.where(bits_mat == 1, true_vals, 9).astype(np.int64)
 
-    entropies = []
+    # Calculate entropy for all layers including the original sequence
+    all_entropies = []
     layers = [seq]
+    
+    # Add entropy for original sequence
+    all_entropies.append(np.array([len(np.unique(row)) for row in seq], dtype=np.int16))
+    
     cur = seq
     for width in range(m, 1, -1):
         cur = 1 + ((cur[:, :-1] + cur[:, 1:] - 1) % 9)
         layers.append(cur)
-        entropies.append(np.array([len(np.unique(row)) for row in cur], dtype=np.int16))
+        all_entropies.append(np.array([len(np.unique(row)) for row in cur], dtype=np.int16))
 
     final_layer = layers[-1]  # (R,1)
     penultimate = layers[-2] if m >= 2 else None  # (R,2)
     antepenultimate = layers[-3] if m >= 3 else None  # (R,3)
 
-    if len(entropies) >= 5:
-        tail = entropies[-5:]
+    # Match Python logic: use last 5 stages if available, otherwise all stages
+    if len(all_entropies) >= 5:
+        tail = all_entropies[-5:]
     else:
-        tail = entropies
+        tail = all_entropies
     ent_tail = (
         np.stack(tail, axis=0).T if len(tail) > 0 else np.zeros((R, 0), dtype=np.int16)
     )
 
     keys = []
     for i in range(R):
-        fin = int(final_layer[i, 0])
+        fin = (int(final_layer[i, 0]),)  # Make it a tuple to match Python version
         pen = (
             tuple(int(x) for x in penultimate[i])
             if penultimate is not None

@@ -118,18 +118,18 @@ class TestUnitPropagation(unittest.TestCase):
 class TestPureLiteralElimination(unittest.TestCase):
     def test_pure_literal_basic(self):
         """Test basic pure literal elimination."""
-        # CNF: (x1 OR x2) AND (x1 OR x3) -> x1 is pure positive
+        # CNF: (x1 OR x2) AND (x1 OR x3) -> x1, x2, x3 are all pure positive
         clauses = [[1, 2], [1, 3]]
         result_clauses, assignment = pure_literal_elim(clauses, {})
         
         self.assertIsNotNone(result_clauses)
-        self.assertEqual(assignment, {1: 1})
+        self.assertEqual(assignment, {1: 1, 2: 1, 3: 1})  # All pure literals assigned
         self.assertEqual(result_clauses, [])  # All clauses satisfied
     
     def test_no_pure_literals(self):
         """Test when no pure literals exist."""
-        # CNF: (x1 OR x2) AND (NOT x1 OR x2) -> x1 appears both positive and negative
-        clauses = [[1, 2], [-1, 2]]
+        # CNF: (x1 OR x2) AND (NOT x1 OR NOT x2) -> both x1 and x2 appear positive and negative
+        clauses = [[1, 2], [-1, -2]]
         result_clauses, assignment = pure_literal_elim(clauses, {})
         
         self.assertEqual(result_clauses, clauses)  # No change
